@@ -4,6 +4,7 @@ var http = require('http')
 var fs = require('fs')
 var url = require('url')
 var port = process.argv[2]
+var sessions = {}
 
 if (!port) {
     console.log('请指定端口号\nnode server.js 8888')
@@ -30,17 +31,21 @@ var server = http.createServer(function (request, response) {
         }
         let cookies = request.headers.cookie.split('; ')
         let hash = {}
-        for (let i = 0; i < cookies.length; i++){
+        for (let i = 0; i < cookies.length; i++) {
             let parts = cookies[i].split('=')
             let key = parts[0]
             let value = parts[1]
             hash[key] = value
         }
-        let email = hash.sign_in_email
+        let mySession = sessions[hash.sessionId]
+        let email
+        if (mySession) {
+            email = mySession.sign_in_email
+        }
         let users = fs.readFileSync('./users.json', 'utf8')
         users = JSON.parse(users)
         let foundUser
-        for (let i = 0; i < users.length; i++){
+        for (let i = 0; i < users.length; i++) {
             if (users[i].email === email) {
                 foundUser = users[i]
                 break
@@ -60,42 +65,49 @@ var server = http.createServer(function (request, response) {
         var string = fs.readFileSync('./style.css', 'utf8')
         response.statusCode = 200
         response.setHeader('Content-Type', 'text/css')
+        response.setHeader('Cache-Control', 'max-age=31536000')
         response.write(string)
         response.end()
     } else if (path === '/default.css') {
         var string = fs.readFileSync('./default.css', 'utf8')
         response.statusCode = 200
         response.setHeader('Content-Type', 'text/css')
+        response.setHeader('Cache-Control', 'max-age=31536000')
         response.write(string)
         response.end()
     } else if (path === '/signup.css') {
         var string = fs.readFileSync('./signup.css', 'utf8')
         response.statusCode = 200
         response.setHeader('Content-Type', 'text/css')
+        response.setHeader('Cache-Control', 'max-age=31536000')
         response.write(string)
         response.end()
     } else if (path === '/signin.css') {
         var string = fs.readFileSync('./signin.css', 'utf8')
         response.statusCode = 200
         response.setHeader('Content-Type', 'text/css')
+        response.setHeader('Cache-Control', 'max-age=31536000')
         response.write(string)
         response.end()
     } else if (path === '/jquery-3.4.1.min.js') { //请修改对应的JS路径和文件名
         var string = fs.readFileSync('./jquery-3.4.1.min.js', 'utf8') //请修改对应的JS路径和文件名
         response.statusCode = 200
         response.setHeader('Content-Type', 'application/javascript')
+        response.setHeader('Cache-Control', 'max-age=31536000')
         response.write(string)
         response.end()
     } else if (path === '/signin.js') { //请修改对应的JS路径和文件名
         var string = fs.readFileSync('./signin.js', 'utf8') //请修改对应的JS路径和文件名
         response.statusCode = 200
         response.setHeader('Content-Type', 'application/javascript')
+        response.setHeader('Cache-Control', 'max-age=31536000')
         response.write(string)
         response.end()
     } else if (path === '/signup.js') { //请修改对应的JS路径和文件名
         var string = fs.readFileSync('./signup.js', 'utf8') //请修改对应的JS路径和文件名
         response.statusCode = 200
         response.setHeader('Content-Type', 'application/javascript')
+        response.setHeader('Cache-Control', 'max-age=31536000')
         response.write(string)
         response.end()
     } else if (path === '/sign_up' && method === 'GET') {
@@ -219,8 +231,17 @@ var server = http.createServer(function (request, response) {
                     }
                     //密码正确
                     if (matching) {
+                        function getRandomStr(len) { //设置长度为len的混合ID
+                            var text = ''
+                            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+                            for( var i=0; i < len; i++ )
+                                text += possible.charAt(Math.floor(Math.random() * possible.length))
+                            return text
+                        }
+                        let sessionId = getRandomStr(40)
+                        sessions[sessionId] = {sign_in_email:email}
                         //设置Cookie
-                        response.setHeader('Set-Cookie',`sign_in_email=${email}`)
+                        response.setHeader('Set-Cookie', `sessionId=${sessionId};max-age=3600`)
                         response.statusCode = 200
                     }
                     //密码错误

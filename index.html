@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="./default.css">
+    <link rel="stylesheet" href="./default.css?v=1.0">
     <title>首页</title>
 </head>
 
@@ -26,10 +26,28 @@
     </div>
 </body>
 <script>
+    //localStorage一次提示效果
+    let already = localStorage.getItem('notice')
+    if(!already){
+        alert(`
+尊敬的用户，您好！
+首次来到我们的功能页面，有以下的内容要提示您：
+①默认的Cookie时间是一小时；
+②默认的缓存时间是一年，测试阶段需要不断修改文件的查询路径，可暂时关闭此功能；
+③我们通过Session的SessionId来获取用户信息；
+④默认的SessionId为40位混合字符组合；
+⑤基本的正则判断有“邮箱/密码/确认密码是否为空”、“邮箱是否有@”、“邮箱是否被注册”、“密码是否正确”；
+⑥这些你都可以修改；
+⑦如果你不更换浏览器或者清除缓存，该内容只会提示一次。
+        `)
+        localStorage.setItem('notice',true)
+    }
+
     let buttonout = document.querySelector('#signout')
     buttonout.onclick = function () {
         clearAllCookie()
     }
+    
     //清除所有cookie函数
     function clearAllCookie() {
         var keys = document.cookie.match(/[^ =;]+(?=\=)/g);
